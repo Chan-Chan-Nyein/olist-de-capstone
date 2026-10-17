@@ -149,6 +149,26 @@ GROUP BY GROUPING SETS (
     ()
 );
 
+SELECT customer_state,
+       COUNT(*) AS customers
+FROM raw.customers
+WHERE customer_state like 'A_'
+GROUP BY customer_state
+having count(*)>2
+
+select * from customers
+
+select customer_state,
+	   count(*) as customer
+from customers
+group by customer_state
+having  count(*)>100 and count(*)<300
+
+SELECT seller_id,
+       COUNT(*) AS items_sold
+FROM raw.order_items
+GROUP BY seller_id
+HAVING COUNT(*) > 100;
 
 
 
