@@ -32,8 +32,8 @@ order by revenue desc limit 10;
 select * from order_reviews;
 select * from orders ;
 select count(*) from order_reviews group by order_id having count(*)>1;
+set search_path = raw;
 
-select count(*)
 from 
 	(select o.order_id,oi.review_score
 	from orders o 
@@ -68,16 +68,31 @@ Reason using left join is to include all order_items from order_items table
 
 
 --4. What share(percentage) of order items were sold by a seller in the same state as the customer?
---select * from sellers ; --state
---select * from order_items;
+
 --select count(*) from sellers group by seller_id having count(*)>1;--primary
 --select count(*) from order_items group by seller_id having count(*)>1;--foregin
 
-select s.seller_state ,sum(oi.total_sold_items )/100 as total_sold_items from 
-(select seller_id,count(*) as total_sold_items
-from order_items group by seller_id) oi
-left join sellers s on oi.seller_id = s.seller_id
-group by s.seller_state ;
+--select s.seller_state ,sum(oi.total_sold_items )/100 as total_sold_items from 
+--(select seller_id,count(*) as total_sold_items
+--from order_items group by seller_id) oi
+--left join sellers s on oi.seller_id = s.seller_id
+--group by s.seller_state ;
+set search_path = raw;
+
+select * from sellers ; --state
+select * from orders; --cuid,
+select * from customers; --cu_state,cusomerid
+select * from order_items; --seller_state,sellerid
+
+select 
+		sum(case when s.seller_state = c.customer_state then 1 else 0 end) as same_state,
+		count(*) as total_items,
+		round(100.0*sum(case when s.seller_state = c.customer_state then 1 else 0 end)/count(*) ,1) as share
+from order_items oi 
+join sellers s on s.seller_id = oi.seller_id
+join orders o on o.order_id = oi.order_id
+join customers c on c.customer_id = o.customer_id;
+
 
 
 
@@ -86,8 +101,8 @@ group by s.seller_state ;
 --select * from order_payments;
 --select count(*) from order_payments group by order_id having count(*)>1; --f
 --select count(*) from order_items group by order_id having count(*)>1; --f
-
-select p.order_id,oi.total_price as revenuue ,p.total_payment from
+set search_path = raw;
+select p.order_id,(total_price+total_freight_value ) as revenuue ,p.total_payment from
      (select order_id ,sum(price) as total_price, sum(freight_value) as total_freight_value
      from order_items group by order_id) as oi
      right join
